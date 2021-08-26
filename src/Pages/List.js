@@ -1,47 +1,58 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
-import axios from 'axios';
 import React, { useState, useEffect } from 'react';
 import NavList from '../Components/NavigationList';
 import TodoDataList from '../Components/TodoDataList';
+import firebase from '../firebase';
+
+function useTodoList() {
+  const [TodoData, setTodoData] = useState([]);
+
+  useEffect(
+    firebase
+    .firestore()
+    .collection('TodoList')
+    .onSnapshot((snapshot) => {
+      const newTodoList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+      setTodoData(newTodoList)
+    })
+  )
+  return TodoData;
+}
+
 
 const List = () => {
 
-    const [TodoData, setTodoData] = useState([]);
+    const TodoData = useTodoList();
     const [tasks, setTasks] = useState();
     const [category, setCategory] = useState();
     const [date, setDate] = useState();
     const [priority, setPriority] = useState();
 
-    useEffect(() => {
-        getData();
-    }, [])
+    function onSubmit(e) {
 
-    const getData = () => {
-        axios.get('http://localhost:3003/todo').then((res) => setTodoData(res.data));
-    };
+      e.preventDefault(); 
 
-    function toTimestamp(strDate)
-    { 
-        let datum = Date.parse(strDate); 
-        
-        return datum/1000;
-    }
+      firebase
+      .firestore()
+      .collection('TodoList')
+      .add(
+        {
+          tasks,
+          category,
+          date,
+          priority,
+        }
+      ).then(() => {
+        setTasks("");
+        setCategory("");
+        setDate(""); 
+        setPriority("");
+      })
+    } 
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        axios.post("http://localhost:3003/todo", {
-            tasks,
-            category,
-            date,
-            priority,
-        }).then(() => {
-            setTasks("");
-            setCategory("");
-            setDate(""); 
-            setPriority("");
-            getData();
-        })
-    }
 
     return (
         <>
@@ -49,7 +60,7 @@ const List = () => {
             <NavList />
             <br />
             {/* Formulaire d'ajout */}
-            <form className="ml-3 mb-2 space-x-2" onSubmit={(e) => handleSubmit(e)}>
+            <form className="ml-3 mb-2 space-x-2" onSubmit={(e) => onSubmit(e)}>
                 <input onChange={(e) => setTasks(e.target.value)} type="text" placeholder="Nom de la tâche" value={tasks}/>
                 <input onChange={(e) => setCategory(e.target.value)} type="text" placeholder="Categorie" value={category}/>
                 <input onChange={(e) => setDate(e.target.value)} id="date" type="date" value={date} />

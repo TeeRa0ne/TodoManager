@@ -1,12 +1,13 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
-import axios from 'axios';
 import React from 'react';
+import firebase from '../firebase';
 
 const DeleteTodo = ({ id }) => {
 
     const handleDelete = () => {
-        axios.delete("http://localhost:3003/todo/" + id);
-        window.location.reload();
+
+        firebase.firestore().collection('TodoList').doc(id).delete();
+
     };
 
     return (

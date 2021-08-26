@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
-import axios from 'axios';
 import DeleteTodo from './DeleteTodo';
+import firebase from '../firebase';
+
 
 
 const TodoDataList = ({ TodoList }) => {
@@ -8,8 +9,7 @@ const TodoDataList = ({ TodoList }) => {
     const [isEdit, setIsEdit] = useState(false);
     const [editTasks, setEditTasks] = useState("");
 
-
-
+    
     const dateParser = (date) => {
         let newDate = new Date(date).toLocaleDateString('fr-FR', {
             year:"numeric", 
@@ -20,6 +20,7 @@ const TodoDataList = ({ TodoList }) => {
     }
 
     const handleEdit = () => {
+
         const data = {
             tasks: editTasks,
             category: TodoList.category,
@@ -28,9 +29,14 @@ const TodoDataList = ({ TodoList }) => {
             
         };
 
-        axios.put('http://localhost:3003/todo/' + TodoList.id, data).then(() => {
-            setIsEdit(false);
-        });
+        
+        firebase.firestore().collection('TodoList')
+        .doc(TodoList.id)
+        .update(data)
+        setIsEdit(false);
+
+    
+
     };
 
     return (
